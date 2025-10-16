@@ -1,16 +1,16 @@
 package main
 
-import "core:math"
+import "core:mem"
 import "vendor:sdl2"
 
 main :: proc() {
-	hittables: []Hittable = {
+	window := sdl2.CreateWindow("Ray Tracer", 0, 0, 800, 600, {.RESIZABLE})
+
+	world: []Hittable = {
 		Sphere{radius = 0.5, center = {0, 1, -1}, albedo = {255, 0, 0}},
 		Sphere{radius = 0.5, center = {0, 0, -1}, albedo = {0, 255, 0}},
 		Sphere{radius = 0.5, center = {0, -1, -1}, albedo = {0, 0, 255}},
 	}
-
-	window := sdl2.CreateWindow("Ray Tracer", 0, 0, 800, 600, {.RESIZABLE})
 
 	event: sdl2.Event
 
@@ -19,8 +19,7 @@ main :: proc() {
 
 		surface := sdl2.GetWindowSurface(window)
 
-		width := f32(surface.w)
-		height := f32(surface.h)
+		width, height := f32(surface.w), f32(surface.h)
 
 		aspect_ratio := width / height
 
@@ -37,22 +36,24 @@ main :: proc() {
 				}
 
 				closest_record: HitRecord = {
-					distance = math.max(f32),
+					distance = 0h7ff00000_00000000,
 				}
 
-				for hittable in hittables {
+				intersected_at_all := false
+
+				for hittable in world {
 					record, intersected := ray_hit(ray, hittable)
 
 					if intersected && record.distance < closest_record.distance {
 						closest_record = record
+						intersected_at_all = true
 					}
 				}
 
-				if closest_record.distance < math.max(f32) {
-					color[0] = closest_record.albedo.b
-					color[1] = closest_record.albedo.g
-					color[2] = closest_record.albedo.r
-					color[3] = 0
+				if intersected_at_all {
+					albedo := closest_record.albedo.bgr
+
+					mem.copy_non_overlapping(color, &albedo, len(albedo))
 				}
 			}
 		}

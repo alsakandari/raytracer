@@ -36,20 +36,21 @@ ray_hit :: proc(ray: Ray, hittable: Hittable) -> (record: HitRecord, intersected
 		r2 := entity.radius * entity.radius
 
 		a := linalg.dot(d, d)
-		b := 2 * linalg.dot(d, o)
+		b := linalg.dot(d, o)
 		c := linalg.dot(o, o) - r2
 
-		discriminant := b * b - (4 * a * c)
+		discriminant := b * b - a * c
 
 		if discriminant < 0 {
 			return
 		}
 
-		intersected = true
-		record.distance = (-b - linalg.sqrt(discriminant)) / (2 * a)
+		record.distance = (-b - linalg.sqrt(discriminant)) / a
 		record.intersection = ray_at(ray, record.distance)
-		record.normal = linalg.normalize(record.intersection)
+		record.normal = record.intersection - entity.center
 		record.albedo = entity.albedo
+
+		intersected = true
 	}
 
 	return
